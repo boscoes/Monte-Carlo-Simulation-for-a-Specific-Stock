@@ -1,0 +1,40 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import yfinance as yf
+
+ticker = 'CRWD'
+num_simulations = 2000
+num_days = 7 
+
+data = yf.download(ticker, start='2024-07-01', end='2024-07-20')
+returns = data['Adj Close'].pct_change().dropna()
+
+mean_return = returns.mean()
+std_return = returns.std()
+
+# Monte Carlo simulation
+simulations = np.zeros((num_days, num_simulations))
+
+for i in range(num_simulations):
+    daily_returns = np.random.normal(mean_return, std_return, num_days)
+    price_series = [data['Adj Close'].iloc[-1]]  # Use .iloc to access the last element by position
+    for daily_return in daily_returns:
+        price_series.append(price_series[-1] * (1 + daily_return))
+    simulations[:, i] = price_series[1:]
+
+# The average predicted prices
+predicted_prices = simulations.mean(axis=1)
+
+# Historical and predicted prices
+combined_prices = np.concatenate((data['Adj Close'].values, predicted_prices))
+historical_dates = data.index
+future_dates = pd.date_range(start=historical_dates[-1], periods=num_days + 1, inclusive='right')
+combined_dates = historical_dates.append(future_dates)
+
+plt.plot(combined_dates, combined_prices, label='Combined Prices')
+plt.xlabel('Date')
+plt.ylabel('Price')
+plt.title('Monte Carlo Simulation Results')
+plt.legend()
+plt.show()
