@@ -1,0 +1,28 @@
+import pandas as pd
+import yfinance as yf
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Download historical data of a specific stock
+data = yf.download('', start='2023-01-01', end='2024-01-01')
+
+# Calculate the short-term and long-term moving averages
+data['Short_MA'] = data['Close'].rolling(window=40).mean()
+data['Long_MA'] = data['Close'].rolling(window=100).mean()
+
+# Create buy/sell signals
+data['Signal'] = 0.0
+data['Signal'][40:] = np.where(data['Short_MA'][40:] > data['Long_MA'][40:], 1.0, 0.0)
+data['Position'] = data['Signal'].diff()
+
+# Plot the graph
+plt.style.use('dark_background')
+plt.figure(figsize=(14, 7))
+plt.plot(data['Close'], label='Close Price')
+plt.plot(data['Short_MA'], label='40-Day Moving Average')
+plt.plot(data['Long_MA'], label='100-Day Moving Average')
+plt.plot(data[data['Position'] == 1].index, data['Short_MA'][data['Position'] == 1], '^', markersize=10, color='g', label='Buy Signal')
+plt.plot(data[data['Position'] == -1].index, data['Short_MA'][data['Position'] == -1], 'v', markersize=10, color='r', label='Sell Signal')
+plt.title('Moving Average Crossover Strategy')
+plt.legend()
+plt.show()
