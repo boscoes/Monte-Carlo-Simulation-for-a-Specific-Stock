@@ -1,0 +1,25 @@
+import yfinance as yf
+import numpy as np
+
+def calculate_expected_return(rf, beta, rm):
+    return rf + beta * (rm - rf)
+
+###rf is the Riske-free rate
+###beta is the Beta of the security
+###rm is the Expected market return
+
+# Inputs from user in terminal 
+ticker = input("Enter the stock ticker: ")
+risk_free_rate = float(input("Enter the risk-free rate (0.03 = 3%): "))
+beta = float(input("Enter the beta: "))
+
+# Extract data from Yahoo Finance in a period of 1 year
+stock = yf.Ticker(ticker)
+market_data = stock.history(period='1y')
+
+# Calculate market return
+market_return = market_data['Close'].pct_change().mean() * 252
+# The number 252 is a rough average of trading days in a year
+
+expected_return = calculate_expected_return(risk_free_rate, beta, market_return)
+print(f"The expected return of {ticker} is {expected_return*100:.2f}%")
